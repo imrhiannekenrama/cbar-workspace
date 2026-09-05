@@ -2,6 +2,7 @@
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Toaster } from "@/components/layout/toaster";
 import "./globals.css";
+import { PwaRegister } from "@/components/pwa/register";
 
 export const metadata: Metadata = {
   title: {
@@ -39,9 +40,11 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <PwaRegister />
           <Toaster />
         </ThemeProvider>
       </body>
     </html>
   );
 }
+
