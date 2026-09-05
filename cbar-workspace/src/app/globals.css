@@ -1,51 +1,51 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 25% 12%;
+    --background: 220 25% 98%;
+    --foreground: 226 30% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 224 25% 12%;
+    --card-foreground: 226 30% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 25% 12%;
-    --primary: 221 83% 40%;
+    --popover-foreground: 226 30% 12%;
+    --primary: 243 75% 59%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 214 60% 95%;
-    --secondary-foreground: 221 83% 30%;
-    --muted: 214 32% 96%;
-    --muted-foreground: 215 16% 45%;
-    --accent: 214 60% 95%;
-    --accent-foreground: 221 83% 30%;
+    --secondary: 240 50% 95%;
+    --secondary-foreground: 243 60% 40%;
+    --muted: 220 20% 95%;
+    --muted-foreground: 220 14% 46%;
+    --accent: 240 50% 95%;
+    --accent-foreground: 243 60% 40%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 90%;
-    --input: 214 32% 88%;
-    --ring: 221 83% 53%;
-    --radius: 0.5rem;
+    --border: 220 18% 90%;
+    --input: 220 18% 88%;
+    --ring: 243 75% 59%;
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 224 30% 7%;
-    --foreground: 210 40% 98%;
-    --card: 224 28% 10%;
-    --card-foreground: 210 40% 98%;
-    --popover: 224 28% 10%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 222 30% 16%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 222 30% 15%;
-    --muted-foreground: 215 20% 62%;
-    --accent: 222 30% 16%;
-    --accent-foreground: 210 40% 98%;
+    --background: 228 28% 7%;
+    --foreground: 214 30% 96%;
+    --card: 227 26% 11%;
+    --card-foreground: 214 30% 96%;
+    --popover: 227 26% 10%;
+    --popover-foreground: 214 30% 96%;
+    --primary: 240 90% 72%;
+    --primary-foreground: 240 50% 12%;
+    --secondary: 228 22% 17%;
+    --secondary-foreground: 214 30% 96%;
+    --muted: 228 22% 16%;
+    --muted-foreground: 218 16% 64%;
+    --accent: 228 22% 17%;
+    --accent-foreground: 214 30% 96%;
     --destructive: 0 63% 51%;
     --destructive-foreground: 210 40% 98%;
-    --border: 222 25% 18%;
-    --input: 222 25% 20%;
-    --ring: 217 91% 60%;
+    --border: 228 18% 19%;
+    --input: 228 18% 21%;
+    --ring: 240 90% 72%;
   }
 }
 
@@ -53,9 +53,99 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: hsl(var(--primary) / 0.18);
+  }
+  h1, h2, h3, h4 {
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  /* Soft layered shadow for elevated surfaces */
+  .shadow-soft {
+    box-shadow:
+      0 1px 2px hsl(var(--foreground) / 0.04),
+      0 4px 12px hsl(var(--foreground) / 0.06);
+  }
+  .shadow-pop {
+    box-shadow:
+      0 1px 2px hsl(var(--foreground) / 0.05),
+      0 8px 24px hsl(var(--foreground) / 0.09),
+      0 16px 48px hsl(var(--primary) / 0.06);
+  }
+
+  /* Interactive lift for cards & tiles */
+  .card-hover {
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    border-color: hsl(var(--primary) / 0.35);
+    box-shadow:
+      0 4px 8px hsl(var(--foreground) / 0.06),
+      0 12px 32px hsl(var(--primary) / 0.10);
+  }
+
+  /* Gradient text accent */
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(258 80% 66%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Subtle dot grid backdrop (login & empty states) */
+  .bg-dots {
+    background-image: radial-gradient(hsl(var(--foreground) / 0.08) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  /* Frosted glass surface */
+  .glass {
+    background: hsl(var(--card) / 0.85);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  }
+
+  /* Gradient brand banner (page headers, login panel) */
+  .bg-brand-gradient {
+    background:
+      radial-gradient(120% 120% at 0% 0%, hsl(258 80% 66% / 0.16) 0%, transparent 55%),
+      radial-gradient(120% 120% at 100% 0%, hsl(var(--primary) / 0.14) 0%, transparent 55%),
+      hsl(var(--card));
+  }
+}
+
+/* Thin, rounded scrollbars everywhere */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
