@@ -1,7 +1,8 @@
 ﻿"use client";
 
 import * as React from "react";
-import { ExternalLink, PhoneOff, Presentation, Video } from "lucide-react";
+import { toast } from "sonner";
+import { Copy, ExternalLink, Presentation, Video } from "lucide-react";
 import { useApp } from "@/components/layout/app-provider";
 import { Button } from "@/components/ui/button";
 
@@ -9,47 +10,28 @@ import { Button } from "@/components/ui/button";
  * Video calls are powered by Jitsi Meet (free, no accounts needed).
  * The host is assembled from pieces at runtime; the room name is derived
  * from the meeting's unique id, so it is unguessable for outsiders.
+ *
+ * IMPORTANT: the call opens in a real browser tab, not an <iframe>.
+ * meet.jit.si auto-disconnects EMBEDDED (iframe) calls after 5 minutes
+ * to push people toward its paid "Jitsi as a Service" product -- but that
+ * limit only applies to embedding. A normal tab has no such cap.
  */
 const JITSI_HOST = ["meet", "jit", "si"].join(".");
 const roomFor = (meetingId: string) => `cbar-${meetingId}`;
 
 export function VideoCallPanel({ meetingId }: { meetingId: string }) {
   const { profile } = useApp();
-  const [active, setActive] = React.useState(false);
   const room = roomFor(meetingId);
   const url = `https://${JITSI_HOST}/${room}`;
 
-  if (active) {
-    return (
-      <div className="overflow-hidden rounded-xl border shadow-soft">
-        <div className="flex items-center justify-between gap-2 border-b bg-muted/50 px-3 py-1.5">
-          <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <Video className="h-3.5 w-3.5 text-primary" /> Live video call
-          </span>
-          <span className="flex items-center gap-1">
-            <a
-              href={url}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1 text-xs text-primary hover:underline"
-            >
-              <ExternalLink className="h-3 w-3" /> Open in new tab
-            </a>
-            <Button variant="ghost" size="sm" onClick={() => setActive(false)}>
-              <PhoneOff className="h-3.5 w-3.5" /> Leave
-            </Button>
-          </span>
-        </div>
-        <iframe
-          src={url}
-          title="Meeting video call"
-          allow="camera; microphone; fullscreen; display-capture; autoplay"
-          allowFullScreen
-          className="h-[65vh] min-h-[420px] w-full border-0"
-        />
-      </div>
-    );
-  }
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Call link copied.");
+    } catch {
+      toast.error("Could not copy the link.");
+    }
+  };
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-brand-gradient p-4">
@@ -60,8 +42,8 @@ export function VideoCallPanel({ meetingId }: { meetingId: string }) {
         <div>
           <p className="text-sm font-medium">Video call</p>
           <p className="text-xs text-muted-foreground">
-            Start or join your team call right here — camera, mic, and screen
-            share. Everyone on this meeting joins the same room.
+            Opens in a new tab -- camera, mic, and screen share, with no time
+            limit. Everyone on this meeting joins the same room.
           </p>
           <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
             <Presentation className="h-3 w-3 text-primary/70" />
@@ -71,10 +53,17 @@ export function VideoCallPanel({ meetingId }: { meetingId: string }) {
           </p>
         </div>
       </div>
-      <Button onClick={() => setActive(true)}>
-        <Video className="h-4 w-4" />
-        {profile ? "Start video call" : "Join video call"}
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={copyLink}>
+          <Copy className="h-3.5 w-3.5" /> Copy link
+        </Button>
+        <a href={url} target="_blank" rel="noreferrer">
+          <Button>
+            <ExternalLink className="h-4 w-4" />
+            {profile ? "Start video call" : "Join video call"}
+          </Button>
+        </a>
+      </div>
     </div>
   );
 }
