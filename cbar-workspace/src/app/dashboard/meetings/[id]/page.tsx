@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { useParams } from "next/navigation";
@@ -14,6 +14,7 @@ import type {
 } from "@/lib/types";
 import { useApp } from "@/components/layout/app-provider";
 import { logActivity } from "@/lib/activity";
+import { VideoCallPanel } from "@/components/meetings/video-call";
 import { RichTextEditor } from "@/components/research/rich-text-editor";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
@@ -123,7 +124,7 @@ export default function MeetingDetailPage() {
     <div>
       <PageHeader
         title={meeting.title}
-        description={`${formatDateTime(meeting.scheduled_at)}${meeting.location ? ` · ${meeting.location}` : ""}`}
+        description={`${formatDateTime(meeting.scheduled_at)}${meeting.location ? ` Â· ${meeting.location}` : ""}`}
         actions={
           <Link href="/dashboard/meetings">
             <Button variant="outline">
@@ -135,6 +136,7 @@ export default function MeetingDetailPage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0 space-y-6">
+          <VideoCallPanel meetingId={meeting.id} />
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -163,7 +165,7 @@ export default function MeetingDetailPage() {
               value={minutes}
               onChange={setMinutes}
               minHeight={280}
-              placeholder="Record what was discussed and agreed…"
+              placeholder="Record what was discussed and agreedâ€¦"
             />
           </div>
         </div>
@@ -301,7 +303,7 @@ function MeetingAttachments({
           {attachments.map((a, i) => (
             <li key={i}>
               <a href={a.url} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline">
-                📎 {a.name}
+                ðŸ“Ž {a.name}
               </a>
             </li>
           ))}
@@ -315,3 +317,4 @@ function MeetingAttachments({
     </div>
   );
 }
+
