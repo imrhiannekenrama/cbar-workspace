@@ -34,7 +34,7 @@ function ResetPasswordForm() {
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
     if (error) {
-      toast.error([error.me](https://error.me)ssage);
+      toast.error(error.message);
     } else {
       toast.success("Password updated. Redirecting…");
       router.replace("/dashboard");
@@ -96,9 +96,9 @@ export function LoginForm() {
     if (error) {
       setLoading(false);
       toast.error(
-        [error.me](https://error.me)ssage === "Invalid login credentials"
+        error.message === "Invalid login credentials"
           ? "Invalid email or password."
-          : [error.me](https://error.me)ssage
+          : error.message
       );
       return;
     }
@@ -166,7 +166,7 @@ export function LoginForm() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="[you@example.com](mailto:you@example.com)"
+                    placeholder="Enter your email address"
                     className="h-11"
                   />
                 </div>
@@ -228,3 +228,4 @@ export function LoginForm() {
     </div>
   );
 }
+
