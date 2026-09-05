@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 224 25% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 25% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 25% 12%;
+    --primary: 221 83% 40%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 214 60% 95%;
+    --secondary-foreground: 221 83% 30%;
+    --muted: 214 32% 96%;
+    --muted-foreground: 215 16% 45%;
+    --accent: 214 60% 95%;
+    --accent-foreground: 221 83% 30%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 90%;
+    --input: 214 32% 88%;
+    --ring: 221 83% 53%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 224 30% 7%;
+    --foreground: 210 40% 98%;
+    --card: 224 28% 10%;
+    --card-foreground: 210 40% 98%;
+    --popover: 224 28% 10%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 222 30% 16%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 30% 15%;
+    --muted-foreground: 215 20% 62%;
+    --accent: 222 30% 16%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 51%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 222 25% 18%;
+    --input: 222 25% 20%;
+    --ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* ----------
+   Rich text content rendered by the editor (both editing & read views)
+   ---------- */
+.rte-content {
+  @apply text-sm leading-relaxed;
+}
+.rte-content h1 {
+  @apply mb-3 mt-5 text-2xl font-bold;
+}
+.rte-content h2 {
+  @apply mb-2 mt-5 text-xl font-semibold;
+}
+.rte-content h3 {
+  @apply mb-2 mt-4 text-lg font-semibold;
+}
+.rte-content p {
+  @apply mb-3;
+}
+.rte-content ul {
+  @apply mb-3 list-disc pl-6;
+}
+.rte-content ol {
+  @apply mb-3 list-decimal pl-6;
+}
+.rte-content blockquote {
+  @apply my-3 border-l-4 border-primary/40 pl-4 italic text-muted-foreground;
+}
+.rte-content a {
+  @apply text-primary underline underline-offset-2;
+}
+.rte-content table {
+  @apply my-3 w-full border-collapse;
+}
+.rte-content table td,
+.rte-content table th {
+  @apply border border-border px-2 py-1 text-left;
+}
+.rte-content img {
+  @apply my-3 max-w-full rounded-lg;
+}
+.rte-content [contenteditable]:focus {
+  outline: none;
+}
+
+/* thin scrollbars for chat & panels */
+.thin-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 999px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
