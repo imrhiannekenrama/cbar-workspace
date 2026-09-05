@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { toast } from "sonner";
@@ -37,7 +37,7 @@ export function CommentsPanel({
     const supabase = createClient();
     const { data } = await supabase
       .from("comments")
-      .select("*, author:profiles!comments_author_id_fk(*)")
+      .select("*, author:profiles!comments_author_id_fkey(*)")
       .eq("section_id", sectionId)
       .order("created_at", { ascending: true });
     if (data) {
@@ -201,7 +201,7 @@ export function CommentsPanel({
                   rows={2}
                   value={replyBody}
                   onChange={(e) => setReplyBody(e.target.value)}
-                  placeholder="Write a reply… use @Name to mention"
+                  placeholder="Write a replyâ€¦ use @Name to mention"
                   className="text-sm"
                 />
                 <Button size="sm" onClick={() => addComment(c.id, replyBody)}>
@@ -223,7 +223,7 @@ export function CommentsPanel({
           rows={3}
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Leave a comment… use @Name to mention a teammate"
+          placeholder="Leave a commentâ€¦ use @Name to mention a teammate"
         />
         <div className="mt-2 flex justify-end">
           <Button size="sm" onClick={() => addComment(null, body)}>
@@ -243,7 +243,7 @@ export function CommentsPanel({
       </label>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading comments…</p>
+        <p className="text-sm text-muted-foreground">Loading commentsâ€¦</p>
       ) : visible.length === 0 ? (
         <EmptyState
           icon={<MessageCircle />}
@@ -270,3 +270,5 @@ function highlightMentions(body: string) {
     )
   );
 }
+
+
