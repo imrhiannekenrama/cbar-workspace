@@ -96,6 +96,11 @@ export interface CommitteeRoster {
   members: string[];
 }
 
+export const ADVISER = {
+  name: "Prof. Daniel Lao Llovia",
+  role: "Research Adviser",
+};
+
 export const LEADER = {
   name: "Rhianne Ken S. Rama",
   roles: ["Group Leader", "Proponent", "On-site Implementer"],

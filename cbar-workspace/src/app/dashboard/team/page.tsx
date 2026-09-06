@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Crown, Shield, Users2 } from "lucide-react";
-import { COMMITTEE_ROSTER, LEADER } from "@/lib/constants";
+import { Crown, GraduationCap, Shield, Users2 } from "lucide-react";
+import { ADVISER, COMMITTEE_ROSTER, LEADER } from "@/lib/constants";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,22 @@ export default function TeamPage() {
         title="Team"
         description="The organizational structure of our CBAR team."
       />
+
+      {/* Research Adviser */}
+      <div className="flex justify-center">
+        <Card className="w-full max-w-xs border-primary/20 bg-muted/40 shadow-sm">
+          <CardHeader className="items-center py-4 text-center">
+            <div className="mb-1.5 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <GraduationCap className="h-5 w-5 text-primary" />
+            </div>
+            <CardTitle className="text-sm">{ADVISER.name}</CardTitle>
+            <CardDescription>{ADVISER.role}</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+
+      {/* Advisory connector (dashed — guidance, not line management) */}
+      <div className="mx-auto hidden h-8 w-px border-l border-dashed border-border md:block" />
 
       {/* Leader */}
       <div className="flex justify-center">
