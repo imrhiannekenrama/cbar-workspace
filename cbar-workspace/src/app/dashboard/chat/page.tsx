@@ -4,10 +4,11 @@ import * as React from "react";
 import { toast } from "sonner";
 import { Megaphone, Send } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import type { Announcement, Message, Profile } from "@/lib/types";
+import type { Announcement, ChannelRead, Message, Profile } from "@/lib/types";
 import { useApp } from "@/components/layout/app-provider";
 import { dmChannel, cn, formatDateTime, timeAgo } from "@/lib/utils";
-import { logActivity, notifyAll } from "@/lib/activity";
+import { logActivity, notifyAll, notifyUser } from "@/lib/activity";
+import { parseMentions, renderWithMentions } from "@/lib/mentions";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -89,6 +90,7 @@ export default function ChatPage() {
               channel="general"
               title="# general"
               subtitle="Everyone in the workspace"
+              members={members}
             />
           )}
           {tab === "announcements" && <Announcements isAdmin={isAdmin} />}
@@ -97,6 +99,7 @@ export default function ChatPage() {
               channel={dmChannel(profile.id, dmTarget.id)}
               title={dmTarget.full_name}
               subtitle="Direct message · private"
+              members={[dmTarget]}
             />
           )}
           {tab === "dm" && !dmTarget && (
@@ -186,19 +189,23 @@ function MobileTab({
 }
 
 // ============================================================
-// Realtime message channel (general + DMs)
+// Realtime message channel (general + DMs) — with @mentions and
+// "Seen by" read receipts on the latest message.
 // ============================================================
 function ChatChannel({
   channel,
   title,
   subtitle,
+  members,
 }: {
   channel: string;
   title: string;
   subtitle: string;
+  members: Profile[];
 }) {
   const { profile } = useApp();
   const [messages, setMessages] = React.useState<Message[]>([]);
+  const [reads, setReads] = React.useState<ChannelRead[]>([]);
   const [body, setBody] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -215,8 +222,31 @@ function ChatChannel({
     setLoading(false);
   }, [channel]);
 
+  const loadReads = React.useCallback(async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("channel_reads")
+      .select("*")
+      .eq("channel", channel);
+    setReads((data ?? []) as ChannelRead[]);
+  }, [channel]);
+
+  // Mark this channel as read by me — called whenever I have it open and
+  // see (new) messages, so teammates can see I've caught up.
+  const markRead = React.useCallback(async () => {
+    if (!profile) return;
+    const supabase = createClient();
+    await supabase
+      .from("channel_reads")
+      .upsert(
+        { channel, profile_id: profile.id, last_read_at: new Date().toISOString() },
+        { onConflict: "channel,profile_id" }
+      );
+  }, [channel, profile]);
+
   React.useEffect(() => {
     load();
+    loadReads();
     const supabase = createClient();
     const sub = supabase
       .channel(`chat-${channel}`)
@@ -246,31 +276,66 @@ function ChatChannel({
         }
       )
       .subscribe();
+    const readsSub = supabase
+      .channel(`chat-reads-${channel}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "channel_reads",
+          filter: `channel=eq.${channel}`,
+        },
+        () => loadReads()
+      )
+      .subscribe();
     return () => {
       supabase.removeChannel(sub);
+      supabase.removeChannel(readsSub);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channel]);
 
   React.useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [messages.length]);
+    // I'm actively viewing this channel — mark whatever is loaded as seen.
+    if (!loading) markRead();
+  }, [messages.length, loading, markRead]);
 
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!body.trim() || !profile) return;
+    const text = body.trim();
+    if (!text || !profile) return;
     const supabase = createClient();
     const { error } = await supabase.from("messages").insert({
       author_id: profile.id,
       channel,
-      body: body.trim(),
+      body: text,
     });
     if (error) {
       toast.error("Message could not be sent.");
       return;
     }
+    const mentions = parseMentions(text, members, profile.id);
+    mentions.forEach((id) =>
+      notifyUser(id, {
+        type: "mention",
+        title: "You were mentioned in chat",
+        body: text.slice(0, 120),
+        link: "/dashboard/chat",
+      })
+    );
     setBody("");
   };
+
+  const lastMessage = messages[messages.length - 1];
+  const seenBy = lastMessage
+    ? members.filter((m) => {
+        if (m.id === lastMessage.author_id) return false;
+        const r = reads.find((r) => r.profile_id === m.id);
+        return r && new Date(r.last_read_at) >= new Date(lastMessage.created_at);
+      })
+    : [];
 
   return (
     <>
@@ -291,24 +356,55 @@ function ChatChannel({
         ) : (
           messages.map((m) => {
             const mine = m.author_id === profile?.id;
+            const isLast = m.id === lastMessage?.id;
             return (
-              <div key={m.id} className={cn("flex gap-2", mine && "flex-row-reverse")}>
-                <Avatar src={m.author?.avatar_url} name={m.author?.full_name ?? "?"} size="sm" />
-                <div className={cn("max-w-[75%]", mine && "text-right")}>
-                  <p className="text-[11px] text-muted-foreground">
-                    {mine ? "You" : m.author?.full_name} · {timeAgo(m.created_at)}
-                  </p>
-                  <div
-                    className={cn(
-                      "mt-0.5 inline-block whitespace-pre-wrap rounded-lg px-3 py-2 text-sm",
-                      mine
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-foreground"
-                    )}
-                  >
-                    {m.body}
+              <div key={m.id} className={cn("flex flex-col gap-1", mine && "items-end")}>
+                <div className={cn("flex gap-2", mine && "flex-row-reverse")}>
+                  <Avatar src={m.author?.avatar_url} name={m.author?.full_name ?? "?"} size="sm" />
+                  <div className={cn("max-w-[75%]", mine && "text-right")}>
+                    <p className="text-[11px] text-muted-foreground">
+                      {mine ? "You" : m.author?.full_name} · {timeAgo(m.created_at)}
+                    </p>
+                    <div
+                      className={cn(
+                        "mt-0.5 inline-block whitespace-pre-wrap rounded-lg px-3 py-2 text-sm",
+                        mine
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-foreground"
+                      )}
+                    >
+                      {renderWithMentions(m.body)}
+                    </div>
                   </div>
                 </div>
+                {isLast && seenBy.length > 0 && (
+                  <div
+                    className={cn(
+                      "flex items-center gap-1.5 pr-1 text-[11px] text-muted-foreground",
+                      mine ? "justify-end pr-9" : "pl-9"
+                    )}
+                  >
+                    <div className="flex -space-x-1.5">
+                      {seenBy.slice(0, 4).map((s) => (
+                        <Avatar
+                          key={s.id}
+                          src={s.avatar_url}
+                          name={s.full_name}
+                          size="sm"
+                          className="h-4 w-4 text-[8px] ring-2 ring-card"
+                        />
+                      ))}
+                    </div>
+                    <span>
+                      Seen by{" "}
+                      {seenBy
+                        .slice(0, 2)
+                        .map((s) => s.full_name.split(" ")[0])
+                        .join(", ")}
+                      {seenBy.length > 2 ? ` +${seenBy.length - 2}` : ""}
+                    </span>
+                  </div>
+                )}
               </div>
             );
           })
@@ -318,7 +414,7 @@ function ChatChannel({
         <Input
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Write a message…"
+          placeholder="Write a message… use @Name to mention a teammate"
         />
         <Button type="submit" size="icon" aria-label="Send">
           <Send className="h-4 w-4" />

@@ -209,3 +209,9 @@ export interface Message {
   created_at: string;
   author?: Profile | null;
 }
+
+export interface ChannelRead {
+  channel: string;
+  profile_id: string;
+  last_read_at: string;
+}

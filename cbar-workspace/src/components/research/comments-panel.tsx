@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import { toast } from "sonner";
@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Comment, Profile } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";
 import { logActivity, notifyUser } from "@/lib/activity";
+import { parseMentions, renderWithMentions } from "@/lib/mentions";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -80,20 +81,10 @@ export function CommentsPanel({
     setMembersMap(map);
   }, [members]);
 
-  const parseMentions = (text: string): string[] => {
-    const ids: string[] = [];
-    members.forEach((m) => {
-      if (m.id !== currentUserId && text.includes(`@${m.full_name}`)) {
-        ids.push(m.id);
-      }
-    });
-    return ids;
-  };
-
   const addComment = async (parentId: string | null, text: string) => {
     if (!text.trim()) return;
     const supabase = createClient();
-    const mentions = parseMentions(text);
+    const mentions = parseMentions(text, members, currentUserId);
     const { error } = await supabase.from("comments").insert({
       section_id: sectionId,
       parent_id: parentId,
@@ -173,7 +164,7 @@ export function CommentsPanel({
               </span>
             </div>
             <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
-              {highlightMentions(c.body)}
+              {renderWithMentions(c.body)}
             </p>
             <div className="mt-2 flex items-center gap-2">
               {!isReply && (
@@ -201,7 +192,7 @@ export function CommentsPanel({
                   rows={2}
                   value={replyBody}
                   onChange={(e) => setReplyBody(e.target.value)}
-                  placeholder="Write a replyâ€¦ use @Name to mention"
+                  placeholder="Write a reply… use @Name to mention"
                   className="text-sm"
                 />
                 <Button size="sm" onClick={() => addComment(c.id, replyBody)}>
@@ -223,7 +214,7 @@ export function CommentsPanel({
           rows={3}
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Leave a commentâ€¦ use @Name to mention a teammate"
+          placeholder="Leave a comment… use @Name to mention a teammate"
         />
         <div className="mt-2 flex justify-end">
           <Button size="sm" onClick={() => addComment(null, body)}>
@@ -243,7 +234,7 @@ export function CommentsPanel({
       </label>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading commentsâ€¦</p>
+        <p className="text-sm text-muted-foreground">Loading comments…</p>
       ) : visible.length === 0 ? (
         <EmptyState
           icon={<MessageCircle />}
@@ -257,18 +248,4 @@ export function CommentsPanel({
     </div>
   );
 }
-
-function highlightMentions(body: string) {
-  const parts = body.split(/(@[A-Za-z .]+(?:[A-Za-z]+))/g);
-  return parts.map((part, i) =>
-    part.startsWith("@") ? (
-      <span key={i} className="rounded bg-primary/10 px-1 font-medium text-primary">
-        {part}
-      </span>
-    ) : (
-      <React.Fragment key={i}>{part}</React.Fragment>
-    )
-  );
-}
-
 
