@@ -373,7 +373,7 @@ function ChatChannel({
                           : "bg-muted text-foreground"
                       )}
                     >
-                      {renderWithMentions(m.body)}
+                      {renderWithMentions(m.body, mine)}
                     </div>
                   </div>
                 </div>

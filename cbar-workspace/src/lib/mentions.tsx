@@ -24,14 +24,23 @@ export function parseMentions(
   return ids;
 }
 
-/** Renders `text` with @Name mentions highlighted in the primary color. */
-export function renderWithMentions(text: string): React.ReactNode {
+/** Renders `text` with @Name mentions highlighted. Pass `mine = true`
+ *  when rendering inside the sender's own (primary-colored) bubble so
+ *  the highlight stays visible there too. */
+export function renderWithMentions(
+  text: string,
+  mine = false
+): React.ReactNode {
   const parts = text.split(/(@[A-Za-z][A-Za-z.]*)/g);
   return parts.map((part, i) =>
     part.startsWith("@") && part.length > 1 ? (
       <span
         key={i}
-        className="rounded bg-primary/10 px-1 font-medium text-primary"
+        className={
+          mine
+            ? "rounded bg-primary-foreground/25 px-1 font-semibold"
+            : "rounded bg-primary/10 px-1 font-medium text-primary"
+        }
       >
         {part}
       </span>
